@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Låtens delar – spelet v1.0</title>
+<style>
+/* ============================================================
+   LÅTENS DELAR – pedagogiskt webbspel (åk 4–6, musik)
+   En enda självbärande HTML-fil. Inga externa filer, ingen server.
+   ============================================================ */
+
+:root{
+  --bg1:#140b2e; --bg2:#241250; --bg3:#0b0720;
+  --panel:rgba(255,255,255,.07);
+  --panel2:rgba(255,255,255,.12);
+  --linje:rgba(255,255,255,.16);
+  --text:#f4f1ff;
+  --text-dim:#c3badf;
+  --guld:#ffd166;
+  --ok:#5ce1a4;
+  --fel:#ff7a8a;
+
+  /* Låtdelarnas färger – samma färg används överallt i spelet */
+  --c-intro:#4fc3f7;
+  --c-vers:#7c9cff;
+  --c-brygga:#b07cff;
+  --c-refrang:#ffd166;
+  --c-stick:#ff8fd0;
+  --c-outro:#8aa0c8;
+  --c-hook:#5ce1a4;
+  --c-riff:#ff9f5a;
+  --c-mellanspel:#66e0d6;
+  --c-adlib:#ff7a8a;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 700px at 15% -10%, #3a1d6e 0%, transparent 60%),
+    radial-gradient(900px 600px at 90% 0%, #1d4d7a 0%, transparent 55%),
+    linear-gradient(160deg, var(--bg1), var(--bg2) 45%, var(--bg3));
+  background-attachment:fixed;
+  overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+}
+
+/* ---------- Dekor: notlinjer + svävande noter ---------- */
+.notlinjer{
+  position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.16;
+  background:repeating-linear-gradient(to bottom, transparent 0 44px, rgba(255,255,255,.5) 44px 45px);
+  mask-image:linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent);
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent);
+}
+.noter{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
+.not{position:absolute; bottom:-60px; font-size:26px; opacity:.22; animation:flyt linear infinite}
+@keyframes flyt{
+  0%{transform:translateY(0) rotate(0deg); opacity:0}
+  10%{opacity:.28}
+  90%{opacity:.18}
+  100%{transform:translateY(-108vh) rotate(28deg); opacity:0}
+}
+@media (prefers-reduced-motion: reduce){ .not{display:none} }
+
+/* ---------- Ram ---------- */
+.wrap{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:18px 16px 60px}
+
+header.topp{
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:14px 18px; margin-bottom:14px;
+  background:var(--panel); border:1px solid var(--linje); border-radius:20px;
+  backdrop-filter:blur(6px);
+}
+.vinyl{
+  width:62px;height:62px;border-radius:50%;flex:0 0 auto;
+  background:
+    radial-gradient(circle at 50% 50%, #ffd166 0 7px, #241a10 7px 9px, transparent 9px),
+    repeating-radial-gradient(circle at 50% 50%, #1a1526 0 3px, #2a2340 3px 6px);
+  box-shadow:0 6px 20px rgba(0,0,0,.45), inset 0 0 0 2px rgba(255,255,255,.08);
+  animation:snurr 7s linear infinite;
+}
+@keyframes snurr{to{transform:rotate(360deg)}}
+h1{margin:0; font-size:clamp(22px,4.4vw,34px); letter-spacing:.5px}
+h1 small{display:block; font-size:14px; font-weight:500; color:var(--text-dim); letter-spacing:0; margin-top:3px}
+.topp .space{flex:1}
+
+button{font:inherit; cursor:pointer}
+.knapp{
+  border:1px solid var(--linje); background:var(--panel2); color:var(--text);
+  padding:10px 16px; border-radius:999px; font-weight:600; transition:transform .12s, background .15s;
+}
+.knapp:hover{background:rgba(255,255,255,.2)}
+.knapp:active{transform:scale(.96)}
+.knapp.primar{background:linear-gradient(135deg,#ffd166,#ff9f5a); color:#2a1a05; border-color:transparent}
+.knapp.stor{padding:14px 26px; font-size:17px}
+
+/* ---------- Flikar ---------- */
+nav.flikar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px}
+nav.flikar button{
+  flex:1 1 150px; padding:13px 10px; border-radius:16px; font-weight:700; font-size:16px;
+  background:var(--panel); color:var(--text-dim); border:1px solid var(--linje);
+  transition:.15s;
+}
+nav.flikar button:hover{color:var(--text); background:var(--panel2)}
+nav.flikar button.aktiv{
+  background:linear-gradient(135deg,#ffd166,#ff9f5a); color:#2a1a05; border-color:transparent;
+  box-shadow:0 8px 22px rgba(255,160,80,.28);
+}
+
+.skarm{display:none; animation:in .25s ease}
+.skarm.aktiv{display:block}
+@keyframes in{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+
+.panel{
+  background:var(--panel); border:1px solid var(--linje); border-radius:20px;
+  padding:18px; margin-bottom:16px; backdrop-filter:blur(6px);
+}
+.panel h2{margin:0 0 6px; font-size:20px}
+.panel p.info{margin:0 0 12px; color:var(--text-dim); line-height:1.5}
+
+/* ---------- Ordlista ---------- */
+.ordkort-rutnat{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px}
+.ordkort{
+  --f:var(--c-vers);
+  position:relative; border-radius:18px; padding:16px 16px 14px;
+  background:linear-gradient(160deg, color-mix(in srgb, var(--f) 22%, transparent), rgba(255,255,255,.05));
+  border:1px solid color-mix(in srgb, var(--f) 45%, transparent);
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  text-align:left; width:100%; color:var(--text);
+}
+.ordkort:hover{background:linear-gradient(160deg, color-mix(in srgb, var(--f) 32%, transparent), rgba(255,255,255,.08))}
+.ordkort .emoji{font-size:26px}
+.ordkort h3{margin:6px 0 2px; font-size:20px; color:var(--f)}
+.ordkort .eng{font-size:13px; color:var(--text-dim); font-style:italic; margin-bottom:8px}
+.ordkort .def{line-height:1.5; font-size:15px}
+.ordkort .ex{
+  margin-top:10px; font-size:14px; line-height:1.45; color:var(--text-dim);
+  border-left:3px solid var(--f); padding-left:10px;
+}
+.ordkort .ex b{color:var(--f)}
+
+/* Strukturtrappa */
+.trappa{display:flex; flex-direction:column; gap:6px; max-width:420px}
+.trappa .steg{
+  --f:var(--c-vers);
+  display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:12px;
+  background:color-mix(in srgb, var(--f) 26%, transparent);
+  border-left:6px solid var(--f); font-weight:700; letter-spacing:1px;
+}
+.trappa .steg span.nr{opacity:.55; font-weight:600; width:22px; text-align:right}
+
+.kom-ihag{border-left:5px solid var(--guld); background:rgba(255,209,102,.12)}
+.kom-ihag ul{margin:8px 0 0; padding-left:20px; line-height:1.6}
+
+/* ---------- Memory ---------- */
+.rad{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px}
+.statruta{
+  display:flex; gap:8px; align-items:center; padding:8px 14px; border-radius:12px;
+  background:rgba(0,0,0,.25); border:1px solid var(--linje); font-weight:700;
+}
+.statruta small{color:var(--text-dim); font-weight:600}
+
+.memory-bord{display:grid; gap:10px; grid-template-columns:repeat(4,1fr); max-width:720px; margin:0 auto}
+.memory-bord.bred{grid-template-columns:repeat(5,1fr); max-width:900px}
+@media(max-width:700px){
+  .memory-bord, .memory-bord.bred{grid-template-columns:repeat(3,1fr); gap:7px}
+}
+.kort{
+  position:relative; aspect-ratio:4/5; perspective:900px; background:none; border:0; padding:0;
+}
+.kort .sida{
+  position:absolute; inset:0; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  text-align:center; padding:8px; backface-visibility:hidden; transition:transform .45s;
+  box-shadow:0 6px 18px rgba(0,0,0,.35); overflow:hidden;
+}
+.kort .bak{
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,255,255,.18) 0 30%, transparent 62%),
+    linear-gradient(150deg,#3b2a72,#6a3fa0);
+  border:1px solid rgba(255,255,255,.22); font-size:30px;
+}
+.kort .fram{
+  --f:var(--c-vers);
+  transform:rotateY(180deg);
+  background:linear-gradient(160deg, color-mix(in srgb, var(--f) 55%, #12102a), #191636);
+  border:2px solid var(--f); color:#fff;
+  font-size:13px; line-height:1.3; font-weight:600;
+}
+.kort .fram.ord{font-size:clamp(15px,3.4vw,21px); font-weight:800; letter-spacing:.5px; color:var(--f)}
+.kort.vand .bak{transform:rotateY(-180deg)}
+.kort.vand .fram{transform:rotateY(0)}
+.kort.klar .fram{border-color:var(--ok); box-shadow:0 0 0 3px rgba(92,225,164,.35); opacity:.85}
+.kort.klar{animation:puls .4s}
+@keyframes puls{50%{transform:scale(1.06)}}
+
+/* ---------- Bygg låten ---------- */
+.palett{display:flex; flex-wrap:wrap; gap:8px; min-height:52px; padding:10px;
+  background:rgba(0,0,0,.22); border:1px dashed var(--linje); border-radius:14px}
+.brik{
+  --f:var(--c-vers);
+  padding:9px 16px; border-radius:999px; font-weight:800; letter-spacing:1px; font-size:15px;
+  background:color-mix(in srgb, var(--f) 80%, #101025); color:#16112b;
+  border:2px solid color-mix(in srgb, var(--f) 90%, #fff); box-shadow:0 4px 12px rgba(0,0,0,.3);
+  transition:transform .12s;
+}
+.brik:active{transform:scale(.94)}
+.brik.vald{outline:3px solid #fff; outline-offset:2px; transform:translateY(-3px)}
+
+.lat-lista{display:flex; flex-direction:column; gap:10px; margin-top:14px}
+.lat-block{
+  display:flex; gap:12px; align-items:stretch;
+  background:rgba(255,255,255,.05); border:1px solid var(--linje); border-radius:14px; padding:10px;
+}
+.lat-block .slot{
+  flex:0 0 132px; border:2px dashed rgba(255,255,255,.3); border-radius:12px;
+  display:flex; align-items:center; justify-content:center; color:var(--text-dim);
+  font-weight:800; letter-spacing:1px; font-size:14px; background:rgba(0,0,0,.18); min-height:56px;
+  padding:4px; text-align:center;
+}
+.lat-block .slot.fylld{--f:var(--c-vers); border-style:solid; border-color:var(--f);
+  background:color-mix(in srgb, var(--f) 70%, #12102a); color:#fff}
+.lat-block .slot.mal{border-color:var(--guld); background:rgba(255,209,102,.18); color:var(--guld)}
+.lat-block.ratt{border-color:var(--ok); box-shadow:0 0 0 2px rgba(92,225,164,.25)}
+.lat-block.fel{animation:skak .35s}
+@keyframes skak{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.lat-block .rad-text{flex:1; white-space:pre-line; line-height:1.5; font-size:15px; align-self:center}
+.lat-block .rad-text i{color:var(--text-dim)}
+@media(max-width:560px){
+  .lat-block{flex-direction:column}
+  .lat-block .slot{flex:none; width:100%}
+}
+
+/* ---------- Test ---------- */
+.fraga-box{font-size:clamp(17px,3.2vw,22px); font-weight:700; line-height:1.45; margin:6px 0 16px}
+.svar-rutnat{display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.svar{
+  padding:15px 16px; border-radius:14px; text-align:left; font-size:16px; font-weight:600;
+  background:var(--panel2); border:1px solid var(--linje); color:var(--text); transition:.15s;
+}
+.svar:hover:not(:disabled){background:rgba(255,255,255,.22); transform:translateY(-2px)}
+.svar:disabled{cursor:default}
+.svar.ratt{background:linear-gradient(135deg,#2f9d6f,#5ce1a4); color:#062016; border-color:transparent}
+.svar.fel{background:linear-gradient(135deg,#8e2f45,#ff7a8a); color:#2b0710; border-color:transparent}
+
+.progress{height:10px; border-radius:999px; background:rgba(0,0,0,.3); overflow:hidden; margin-bottom:14px}
+.progress i{display:block; height:100%; background:linear-gradient(90deg,#ffd166,#ff9f5a); width:0; transition:width .3s}
+
+.mikrolektion{
+  margin-top:14px; padding:14px 16px; border-radius:14px; line-height:1.55;
+  border-left:5px solid var(--guld); background:rgba(255,209,102,.14);
+}
+.mikrolektion.bra{border-left-color:var(--ok); background:rgba(92,225,164,.14)}
+.mikrolektion b{color:var(--guld)}
+.mikrolektion.bra b{color:var(--ok)}
+
+.resultat{text-align:center; padding:14px}
+.resultat .stora{font-size:clamp(38px,9vw,64px); font-weight:900; color:var(--guld); line-height:1.1}
+.stjarnor{font-size:36px; letter-spacing:6px; margin:6px 0 4px}
+.mastery{display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:16px; text-align:left}
+.mastery div{--f:var(--c-vers); padding:9px 12px; border-radius:12px; font-weight:700;
+  background:color-mix(in srgb, var(--f) 22%, transparent); border-left:5px solid var(--f)}
+.mastery div span{float:right; font-weight:800}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed; left:50%; top:16px; transform:translate(-50%,-140%); z-index:50;
+  padding:13px 22px; border-radius:14px; font-weight:700; max-width:min(92vw,520px);
+  background:#20183f; border:1px solid var(--linje); box-shadow:0 12px 30px rgba(0,0,0,.5);
+  transition:transform .28s; line-height:1.4; text-align:center;
+}
+#toast.visa{transform:translate(-50%,0)}
+#toast.bra{background:linear-gradient(135deg,#1d6b4d,#2f9d6f)}
+#toast.daligt{background:linear-gradient(135deg,#7a2436,#b83e55)}
+
+footer{text-align:center; color:var(--text-dim); font-size:13px; margin-top:26px}
+.dold{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="notlinjer"></div>
+<div class="noter" id="noter"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div class="wrap">
+
+  <header class="topp">
+    <div class="vinyl" aria-hidden="true"></div>
+    <h1>Låtens delar
+      <small>Lär dig hur en låt är byggd – ord, memory, bygge och test</small>
+    </h1>
+    <div class="space"></div>
+    <button class="knapp" id="ljudKnapp" title="Slå på eller av ljudet">🔇 Ljud av</button>
+  </header>
+
+  <nav class="flikar" id="flikar">
+    <button data-lage="ordlista" class="aktiv">📖 Ordlista</button>
+    <button data-lage="memory">🧠 Memory</button>
+    <button data-lage="bygg">🧱 Bygg låten</button>
+    <button data-lage="test">🎯 Testet</button>
+  </nav>
+
+  <!-- ===================== ORDLISTA ===================== -->
+  <section class="skarm aktiv" id="skarm-ordlista">
+    <div class="panel">
+      <h2>🎼 Så spelas många låtar – uppifrån och ner</h2>
+      <p class="info">En låt är byggd av olika delar, precis som ett lego-bygge av olika klossar.
+        Varje del har sin egen färg som följer med hela vägen genom spelet.</p>
+      <div class="trappa" id="trappa"></div>
+    </div>
+
+    <div class="panel">
+      <h2>📚 Ordlista – vad betyder orden?</h2>
+      <p class="info">Läs korten innan du spelar. Tryck på ett kort för att höra dess ton.</p>
+      <div class="ordkort-rutnat" id="ordlistaHuvud"></div>
+    </div>
+
+    <div class="panel">
+      <h2>➕ Fler bra ord</h2>
+      <div class="ordkort-rutnat" id="ordlistaExtra"></div>
+    </div>
+
+    <div class="panel kom-ihag">
+      <h2>💡 Kom ihåg!</h2>
+      <ul>
+        <li><b>Brygga och stick är INTE samma sak.</b> Bryggan kommer precis före refrängen och bygger upp.
+          Sticket låter annorlunda och kommer oftast bara en gång.</li>
+        <li><b>En hook kan vara många olika saker</b> – en textrad, en melodi, ett ljud eller ett riff.
+          Allt som fastnar och gör låten lätt att minnas.</li>
+        <li><b>Lurigt engelska:</b> <i>bridge</i> = stick, medan svenska <i>brygga</i> heter <i>pre-chorus</i>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== MEMORY ===================== -->
+  <section class="skarm" id="skarm-memory">
+    <div class="panel">
+      <h2>🧠 Memory – para ihop ordet med betydelsen</h2>
+      <p class="info">Vänd två kort. Hittar du <b>ordet</b> och rätt <b>betydelse</b> stannar korten uppe.
+        Klara hela brädet på så få försök som möjligt!</p>
+      <div class="rad">
+        <button class="knapp primar" id="memNy6">▶︎ Starta: 6 par</button>
+        <button class="knapp" id="memNy10">▶︎ Utmaning: 10 par</button>
+        <div class="statruta">Försök <span id="memForsok">0</span></div>
+        <div class="statruta">Hittade <span id="memHittade">0</span><small>/<span id="memTotal">6</span></small></div>
+        <div class="statruta">🏆 Rekord <span id="memRekord">–</span></div>
+      </div>
+      <div class="memory-bord" id="memoryBord"></div>
+    </div>
+  </section>
+
+  <!-- ===================== BYGG LÅTEN ===================== -->
+  <section class="skarm" id="skarm-bygg">
+    <div class="panel">
+      <h2>🧱 Bygg låten: ”Regn på rutan”</h2>
+      <p class="info">Här är en påhittad låt – men delarnas namn saknas!
+        <b>Tryck på en kloss</b> nedan och <b>tryck sedan på rutan</b> där den hör hemma (eller dra den dit).
+        Tryck på en fylld ruta för att ta tillbaka klossen. Klicka på <b>Kontrollera</b> när du är klar.</p>
+      <div class="palett" id="palett"></div>
+      <div class="rad" style="margin-top:12px">
+        <button class="knapp primar" id="byggKolla">✔︎ Kontrollera</button>
+        <button class="knapp" id="byggNollstall">↺ Börja om</button>
+        <div class="statruta">Rätt <span id="byggRatt">0</span><small>/10</small></div>
+      </div>
+      <div class="lat-lista" id="latLista"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TEST ===================== -->
+  <section class="skarm" id="skarm-test">
+    <div class="panel" id="testStart">
+      <h2>🎯 Testet</h2>
+      <p class="info">8 frågor om låtens delar. Svara du fel får du en liten förklaring direkt –
+        det är så man lär sig. Efteråt ser du vad du är bäst på och vad du behöver träna mer på.</p>
+      <div class="rad">
+        <button class="knapp primar stor" id="testStarta">▶︎ Starta testet</button>
+        <div class="statruta">🏆 Rekord <span id="testRekord">–</span><small>/8</small></div>
+      </div>
+    </div>
+
+    <div class="panel dold" id="testSpel">
+      <div class="progress"><i id="testProgress"></i></div>
+      <div class="rad" style="justify-content:space-between">
+        <div class="statruta">Fråga <span id="testNr">1</span><small>/8</small></div>
+        <div class="statruta">Rätt <span id="testPoang">0</span></div>
+      </div>
+      <div class="fraga-box" id="testFraga"></div>
+      <div class="svar-rutnat" id="testSvar"></div>
+      <div id="testFeedback"></div>
+      <div class="rad" style="margin-top:14px">
+        <button class="knapp primar dold" id="testNasta">Nästa ➜</button>
+      </div>
+    </div>
+
+    <div class="panel dold" id="testResultat">
+      <div class="resultat">
+        <div class="stjarnor" id="resStjarnor"></div>
+        <div class="stora"><span id="resPoang">0</span>/8</div>
+        <p id="resText" style="font-size:18px; line-height:1.5"></p>
+        <div class="mastery" id="resMastery"></div>
+        <div class="rad" style="justify-content:center; margin-top:18px">
+          <button class="knapp primar stor" id="testIgen">↺ Spela igen</button>
+          <button class="knapp stor" id="testTillOrdlista">📖 Till ordlistan</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Låtens delar · musik åk 4–6 · allt sparas bara i den här datorn (inga namn, inget skickas någonstans)</footer>
+</div>
+
+<script>
+/* =========================================================
+   KONFIG – skruva här
+   ========================================================= */
+const KONFIG = {
+  ANTAL_FRAGOR: 8,          // frågor per testomgång
+  MEMORY_VISA_MS: 900,      // hur länge två olästa kort visas innan de vänds tillbaka
+  TOAST_MS: 3600,           // hur länge en mikrolektion syns
+  LJUD_PA_START: false      // ljud AV som standard (25 datorer med ljud = kaos)
+};
+
+/* =========================================================
+   DATABANK – låtdelarna (samma text som ordlistan)
+   ========================================================= */
+const DELAR = [
+  { id:'intro', namn:'Intro', eng:'intro', emoji:'🎹', ton:392.00, huvud:true,
+    kort:'Början på låten, innan någon sjunger.',
+    def:'Början på låten, innan någon sjunger. Ofta bara musik. Den bjuder in dig i låten.',
+    ex:'Ett lugnt piano som spelar innan sången börjar.' },
+
+  { id:'vers', namn:'Vers', eng:'verse', emoji:'📖', ton:440.00, huvud:true,
+    kort:'Här berättas historien – samma musik, nya ord varje gång.',
+    def:'Här berättas historien. Musiken låter likadan varje gång, men orden byts ut. Tänk olika sidor i en bok.',
+    ex:'Vers 1 och vers 2 har samma melodi men olika text.' },
+
+  { id:'brygga', namn:'Brygga', eng:'pre-chorus', emoji:'🪜', ton:493.88, huvud:true,
+    kort:'Kort del precis FÖRE refrängen som bygger upp.',
+    def:'En kort del precis före refrängen. Den bygger upp och gör dig taggad – som en trappa upp mot refrängen.',
+    ex:'”För djupt därinne vet jag…” – och sen kommer refrängen!' },
+
+  { id:'refrang', namn:'Refräng', eng:'chorus', emoji:'⭐', ton:523.25, huvud:true,
+    kort:'Delen som kommer tillbaka flera gånger med samma ord – den du sjunger med i.',
+    def:'Den viktigaste och roligaste delen! Den kommer tillbaka flera gånger, alltid med samma ord och melodi. Ofta finns låtens namn här. Det är den du sjunger med i.',
+    ex:'”Låt det regna, låt det ösa…”' },
+
+  { id:'stick', namn:'Stick', eng:'bridge', emoji:'✨', ton:587.33, huvud:true,
+    kort:'Del som låter annorlunda och kommer oftast bara EN gång.',
+    def:'En del som låter annorlunda än resten. Den kommer oftast bara en enda gång och överraskar lite. OBS: stick och brygga är inte samma sak!',
+    ex:'En ny melodi mot slutet, precis innan sista refrängen.' },
+
+  { id:'outro', namn:'Outro', eng:'outro', emoji:'🌙', ton:349.23, huvud:true,
+    kort:'Slutet på låten – tonar bort eller slutar tvärt.',
+    def:'Slutet på låten. Den kan tona bort långsamt eller sluta tvärt.',
+    ex:'Refrängen upprepas allt tystare tills låten tar slut.' },
+
+  { id:'hook', namn:'Hook', eng:'hook', emoji:'🪝', ton:659.25, huvud:true,
+    kort:'”Kroken” som fastnar i huvudet och gör att du minns låten.',
+    def:'”Kroken” som fastnar i huvudet och gör att du gillar och minns låten. En hook kan vara nästan vad som helst: en textrad, en melodi, ett coolt ljud, ett gitarriff – eller något annat som sticker ut. Det är det du nynnar på efteråt.',
+    ex:'Ett ”na-na-na” du sjunger med i, eller ett ljud du känner igen direkt.' },
+
+  { id:'riff', namn:'Riff', eng:'riff', emoji:'🎸', ton:293.66, huvud:false,
+    kort:'Kort musikslinga som spelas om och om igen, ofta på gitarr.',
+    def:'En kort musikslinga som spelas om och om igen, ofta på gitarr eller bas. Du känner igen den direkt.',
+    ex:'Gitarrslingan i början av en rocklåt som kommer tillbaka hela tiden.' },
+
+  { id:'mellanspel', namn:'Mellanspel', eng:'solo/interlude', emoji:'🎺', ton:329.63, huvud:false,
+    kort:'Del utan sång där instrumenten får spela själva.',
+    def:'En del utan sång där instrumenten får spela själva, till exempel ett gitarrsolo.',
+    ex:'Ett gitarrsolo mitt i låten, efter andra refrängen.' },
+
+  { id:'adlib', namn:'Ad-lib', eng:'ad-lib', emoji:'🎤', ton:698.46, huvud:false,
+    kort:'Små extraljud som sångaren hittar på, t.ex. ”oh yeah!”.',
+    def:'Små extraljud som sångaren hittar på, till exempel ”oh yeah!” eller ”hey!”.',
+    ex:'Ett ”hey!” mellan raderna i refrängen.' }
+];
+const delMap = Object.fromEntries(DELAR.map(d => [d.id, d]));
+const farg = id => `var(--c-${id})`;
+
+/* Typisk låtstruktur (trappan i ordlistan) */
+const STRUKTUR = ['intro','vers','brygga','refrang','vers','brygga','refrang','stick','refrang','outro'];
+
+/* Låten "Regn på rutan" – blocken i rätt ordning */
+const LATEN = [
+  { del:'intro',   text:'<i>(instrumentalt – lugnt piano, ingen sång än)</i>' },
+  { del:'vers',    text:'Regnet trummar mot min ruta,\nhimlen hänger tung och grå.\nAlla lampor får jag tända,\nmen jag nynnar ändå.' },
+  { del:'brygga',  text:'För djupt därinne vet jag –\ndet här mörkret ska gå om.' },
+  { del:'refrang', text:'Låt det regna, låt det ösa,\njag bär ljuset här inuti!\nLåt det regna, låt det ösa,\nsnart är himlen åter fri.' },
+  { del:'vers',    text:'Katten kurar under bänken,\nvinden viner kall och grå.\nMen jag sitter varm vid fönstret\noch jag nynnar ändå.' },
+  { del:'brygga',  text:'För djupt därinne vet jag –\ndet här mörkret ska gå om.' },
+  { del:'refrang', text:'Låt det regna, låt det ösa,\njag bär ljuset här inuti!\nLåt det regna, låt det ösa,\nsnart är himlen åter fri.' },
+  { del:'stick',   text:'Och när ovädret drar in igen,\nviskar jag till mig själv, min vän:\nefter regn – kommer alltid sol.' },
+  { del:'refrang', text:'Låt det regna, låt det ösa,\njag bär ljuset här inuti!… <i>(x2)</i>' },
+  { del:'outro',   text:'…snart är himlen åter fri… <i>(tonar ut)</i>' }
+];
+
+/* Frågebank – distraktorerna är riktiga förväxlingar, inte slump */
+const FRAGOR = [
+  { del:'refrang', f:'Vilken del kommer tillbaka flera gånger med <b>samma ord och melodi</b> – den du sjunger med i?',
+    r:'Refräng', fel:['Vers','Stick','Intro'],
+    forkl:'Refrängen upprepas med samma text. Versen kommer också tillbaka, men får <b>nya ord</b> varje gång.' },
+  { del:'vers', f:'I vilken del <b>byts orden ut</b> varje gång, fast musiken låter likadan?',
+    r:'Vers', fel:['Refräng','Hook','Outro'],
+    forkl:'Versen berättar historien – som olika sidor i en bok. Refrängen har alltid samma ord.' },
+  { del:'brygga', f:'Vilken del kommer <b>precis före refrängen</b> och bygger upp som en trappa?',
+    r:'Brygga', fel:['Stick','Intro','Mellanspel'],
+    forkl:'Bryggan (pre-chorus) laddar upp mot refrängen. Sticket är något annat – det kommer oftast bara en gång.' },
+  { del:'stick', f:'Vilken del <b>låter annorlunda</b> än resten och kommer oftast bara <b>en enda gång</b>?',
+    r:'Stick', fel:['Brygga','Vers','Refräng'],
+    forkl:'Sticket (bridge) överraskar mot slutet. Bryggan kommer däremot varje gång, precis före refrängen.' },
+  { del:'intro', f:'Vad kallas <b>början</b> på låten, innan någon sjunger?',
+    r:'Intro', fel:['Outro','Brygga','Ad-lib'],
+    forkl:'Intro = in i låten. Outro = ut ur låten.' },
+  { del:'outro', f:'Låten tonar bort allt tystare tills den tar slut. Vilken del är det?',
+    r:'Outro', fel:['Intro','Stick','Mellanspel'],
+    forkl:'Outrot avslutar låten – den kan tona ut eller sluta tvärt.' },
+  { del:'hook', f:'Vad kallas det som <b>fastnar i huvudet</b> och gör att du minns låten?',
+    r:'Hook', fel:['Riff','Vers','Brygga'],
+    forkl:'En hook kan vara vad som helst som fastnar: en textrad, en melodi eller ett ljud. Ett riff är alltid en musikslinga.' },
+  { del:'riff', f:'En kort musikslinga på gitarr som spelas om och om igen – vad heter den?',
+    r:'Riff', fel:['Hook','Ad-lib','Stick'],
+    forkl:'Riffet är slingan som upprepas. Den kan mycket väl också vara låtens hook!' },
+  { del:'adlib', f:'Sångaren ropar ”oh yeah!” och ”hey!” mellan raderna. Vad kallas det?',
+    r:'Ad-lib', fel:['Hook','Riff','Brygga'],
+    forkl:'Ad-libs är små extraljud som sångaren hittar på, ofta ovanpå refrängen.' },
+  { del:'mellanspel', f:'Mitt i låten spelar gitarren ensam ett solo, helt utan sång. Vad kallas den delen?',
+    r:'Mellanspel', fel:['Stick','Intro','Brygga'],
+    forkl:'Mellanspel (solo/interlude) = instrumenten får plats. Sticket har oftast sång, fast med ny melodi.' },
+  { del:'refrang', f:'I vilken del hittar man oftast <b>låtens namn</b>?',
+    r:'Refräng', fel:['Vers','Intro','Riff'],
+    forkl:'Titeln ligger nästan alltid i refrängen – det är den raden alla minns.' },
+  { del:'refrang', f:'Vad heter <i>chorus</i> på svenska?',
+    r:'Refräng', fel:['Vers','Brygga','Stick'],
+    forkl:'Chorus = refräng. Verse = vers.' },
+  { del:'stick', f:'Vad heter <i>bridge</i> på svenska?',
+    r:'Stick', fel:['Brygga','Mellanspel','Riff'],
+    forkl:'Lurigt! Engelskans <b>bridge</b> = svenskans <b>stick</b>. Svenskans <b>brygga</b> heter <b>pre-chorus</b> på engelska.' },
+  { del:'brygga', f:'I ”Regn på rutan” kommer raderna ”För djupt därinne vet jag…” <b>precis före</b> refrängen. Vilken del är det?',
+    r:'Brygga', fel:['Stick','Vers','Outro'],
+    forkl:'Kort del + kommer före refrängen + bygger upp = brygga.' },
+  { del:'stick', f:'Vad är sant om brygga och stick?',
+    r:'Bryggan kommer före refrängen, sticket kommer oftast bara en gång',
+    fel:['Det är två namn på samma sak','Sticket kommer alltid först i låten','Bryggan är alltid låtens sista del'],
+    forkl:'De är olika delar! Brygga = uppbyggnad före refrängen. Stick = en annorlunda del, oftast bara en gång.' },
+  { del:'vers', f:'Vers 1 och vers 2 har samma melodi. Vad är skillnaden mellan dem?',
+    r:'Texten – orden är nya', fel:['Melodin är helt ny','De är exakt likadana','Den ena har ingen sång'],
+    forkl:'Samma musik, nya ord – det är precis det som gör en vers till en vers.' }
+];
+
+/* =========================================================
+   HJÄLPARE
+   ========================================================= */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+function blanda(a){ const b=a.slice(); for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]];} return b; }
+
+let toastTimer=null;
+function toast(html, typ){
+  const t = $('#toast');
+  t.innerHTML = html;
+  t.className = 'visa' + (typ ? ' ' + typ : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ t.className=''; }, KONFIG.TOAST_MS);
+}
+
+/* ---- localStorage (bara rekord, inga personuppgifter) ---- */
+const LS = {
+  las(n, standard){ try{ const v = localStorage.getItem('latdelar_'+n); return v===null?standard:JSON.parse(v);}catch(e){return standard;} },
+  skriv(n, v){ try{ localStorage.setItem('latdelar_'+n, JSON.stringify(v)); }catch(e){} }
+};
+
+/* =========================================================
+   LJUD – Web Audio, av som standard
+   ========================================================= */
+let ljudPa = KONFIG.LJUD_PA_START, ac = null;
+function ctx(){ if(!ac){ try{ ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } } return ac; }
+function ton(freq, tid=0.18, typ='sine', vol=0.16, fordroj=0){
+  if(!ljudPa) return;
+  const c = ctx(); if(!c) return;
+  if(c.state === 'suspended') c.resume();
+  const o = c.createOscillator(), g = c.createGain();
+  const t0 = c.currentTime + fordroj;
+  o.type = typ; o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + tid);
+  o.connect(g); g.connect(c.destination);
+  o.start(t0); o.stop(t0 + tid + 0.05);
+}
+const ljud = {
+  klick(){ ton(660, .07, 'triangle', .08); },
+  flip(){ ton(520, .09, 'triangle', .09); },
+  ratt(){ [523.25,659.25,783.99].forEach((f,i)=>ton(f,.22,'sine',.15,i*0.07)); },
+  fel(){ ton(220,.22,'sawtooth',.10); ton(174,.28,'sawtooth',.10,.12); },
+  vinst(){ [523.25,659.25,783.99,1046.5].forEach((f,i)=>ton(f,.30,'triangle',.16,i*0.11)); }
+};
+$('#ljudKnapp').addEventListener('click', ()=>{
+  ljudPa = !ljudPa;
+  $('#ljudKnapp').textContent = ljudPa ? '🔊 Ljud på' : '🔇 Ljud av';
+  if(ljudPa) ljud.ratt();
+});
+
+/* =========================================================
+   BAKGRUNDSNOTER
+   ========================================================= */
+(function noter(){
+  const tecken = ['♪','♫','♬','🎵','🎶','♩'];
+  const box = $('#noter');
+  for(let i=0;i<14;i++){
+    const n = document.createElement('span');
+    n.className = 'not';
+    n.textContent = tecken[i % tecken.length];
+    n.style.left = (Math.random()*98) + '%';
+    n.style.animationDuration = (16 + Math.random()*16) + 's';
+    n.style.animationDelay = (-Math.random()*24) + 's';
+    n.style.fontSize = (16 + Math.random()*22) + 'px';
+    box.appendChild(n);
+  }
+})();
+
+/* =========================================================
+   FLIKAR
+   ========================================================= */
+$('#flikar').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-lage]'); if(!b) return;
+  visaLage(b.dataset.lage);
+});
+function visaLage(lage){
+  $$('#flikar button').forEach(b => b.classList.toggle('aktiv', b.dataset.lage === lage));
+  $$('.skarm').forEach(s => s.classList.toggle('aktiv', s.id === 'skarm-' + lage));
+  ljud.klick();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* =========================================================
+   ORDLISTA
+   ========================================================= */
+function byggOrdlista(){
+  const trappa = $('#trappa');
+  STRUKTUR.forEach((id, i)=>{
+    const d = delMap[id];
+    const rad = document.createElement('div');
+    rad.className = 'steg';
+    rad.style.setProperty('--f', farg(id));
+    rad.innerHTML = `<span class="nr">${i+1}</span> ${d.emoji} ${d.namn.toUpperCase()}`;
+    trappa.appendChild(rad);
+  });
+
+  const kort = d => {
+    const b = document.createElement('button');
+    b.className = 'ordkort';
+    b.style.setProperty('--f', farg(d.id));
+    b.innerHTML = `
+      <div class="emoji">${d.emoji}</div>
+      <h3>${d.namn}</h3>
+      <div class="eng">(${d.eng})</div>
+      <div class="def">${d.def}</div>
+      <div class="ex"><b>Exempel:</b> ${d.ex}</div>`;
+    b.addEventListener('click', ()=> ton(d.ton, .5, 'triangle', .14));
+    return b;
+  };
+  DELAR.filter(d=>d.huvud).forEach(d => $('#ordlistaHuvud').appendChild(kort(d)));
+  DELAR.filter(d=>!d.huvud).forEach(d => $('#ordlistaExtra').appendChild(kort(d)));
+}
+
+/* =========================================================
+   MEMORY
+   ========================================================= */
+const mem = { kort:[], vanda:[], hittade:0, forsok:0, total:6, last:false };
+
+function startaMemory(antalPar){
+  const valda = blanda(DELAR).slice(0, antalPar);
+  mem.kort = blanda(valda.flatMap(d => ([
+    { id:d.id, typ:'ord',      html:`${d.emoji}<br>${d.namn}` },
+    { id:d.id, typ:'betydelse',html:d.kort }
+  ])));
+  mem.vanda = []; mem.hittade = 0; mem.forsok = 0; mem.total = antalPar; mem.last = false;
+  $('#memForsok').textContent = 0;
+  $('#memHittade').textContent = 0;
+  $('#memTotal').textContent = antalPar;
+  visaMemRekord();
+
+  const bord = $('#memoryBord');
+  bord.classList.toggle('bred', antalPar > 6);
+  bord.innerHTML = '';
+  mem.kort.forEach((k, i)=>{
+    const b = document.createElement('button');
+    b.className = 'kort';
+    b.dataset.i = i;
+    b.innerHTML = `
+      <span class="sida bak">🎵</span>
+      <span class="sida fram ${k.typ==='ord'?'ord':''}" style="--f:${farg(k.id)}">${k.html}</span>`;
+    b.addEventListener('click', ()=> vandKort(i));
+    bord.appendChild(b);
+  });
+}
+function memRekordNyckel(){ return 'mem_rekord_' + mem.total; }
+function visaMemRekord(){
+  const r = LS.las(memRekordNyckel(), null);
+  $('#memRekord').textContent = r === null ? '–' : r + ' försök';
+}
+function vandKort(i){
+  if(mem.last) return;
+  const el = $(`.kort[data-i="${i}"]`);
+  if(!el || el.classList.contains('klar') || el.classList.contains('vand')) return;
+
+  el.classList.add('vand'); ljud.flip();
+  mem.vanda.push(i);
+
+  if(mem.vanda.length === 2){
+    mem.forsok++; $('#memForsok').textContent = mem.forsok;
+    const [a,b] = mem.vanda.map(n => mem.kort[n]);
+    const elA = $(`.kort[data-i="${mem.vanda[0]}"]`), elB = $(`.kort[data-i="${mem.vanda[1]}"]`);
+
+    if(a.id === b.id && a.typ !== b.typ){
+      const d = delMap[a.id];
+      elA.classList.add('klar'); elB.classList.add('klar');
+      mem.vanda = []; mem.hittade++;
+      $('#memHittade').textContent = mem.hittade;
+      ljud.ratt();
+      toast(`✅ <b>${d.namn}</b> – ${d.kort}`, 'bra');
+      if(mem.hittade === mem.total){
+        setTimeout(()=>{
+          ljud.vinst();
+          const rek = LS.las(memRekordNyckel(), null);
+          if(rek === null || mem.forsok < rek){ LS.skriv(memRekordNyckel(), mem.forsok); visaMemRekord();
+            toast(`🏆 Nytt rekord! Alla ${mem.total} par på ${mem.forsok} försök!`, 'bra');
+          } else {
+            toast(`🎉 Klart! Alla ${mem.total} par på ${mem.forsok} försök. Rekordet är ${rek}.`, 'bra');
+          }
+        }, 350);
+      }
+    } else {
+      mem.last = true; ljud.fel();
+      setTimeout(()=>{
+        elA.classList.remove('vand'); elB.classList.remove('vand');
+        mem.vanda = []; mem.last = false;
+      }, KONFIG.MEMORY_VISA_MS);
+    }
+  }
+}
+$('#memNy6').addEventListener('click', ()=>{ startaMemory(6); ljud.klick(); });
+$('#memNy10').addEventListener('click', ()=>{ startaMemory(10); ljud.klick(); });
+
+/* =========================================================
+   BYGG LÅTEN
+   ========================================================= */
+let valdBrik = null;   // {el, del}
+let byggLast = false;
+
+function byggUpp(){
+  valdBrik = null; byggLast = false;
+  $('#byggRatt').textContent = '0';
+
+  // Palett: en kloss per block i låten, blandade
+  const palett = $('#palett');
+  palett.innerHTML = '';
+  blanda(LATEN.map((b,i)=>({ del:b.del, key:i }))).forEach(b => palett.appendChild(skapaBrik(b.del)));
+
+  // Låtblocken med tomma rutor
+  const lista = $('#latLista');
+  lista.innerHTML = '';
+  LATEN.forEach((b, i)=>{
+    const rad = document.createElement('div');
+    rad.className = 'lat-block';
+    rad.dataset.i = i;
+    rad.innerHTML = `
+      <div class="slot" data-slot="${i}" tabindex="0" role="button" aria-label="Ruta ${i+1}">?</div>
+      <div class="rad-text">${b.text}</div>`;
+    lista.appendChild(rad);
+  });
+
+  // Klick/tap på ruta
+  lista.querySelectorAll('.slot').forEach(slot=>{
+    slot.addEventListener('click', ()=> slotKlick(slot));
+    slot.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); slotKlick(slot); } });
+    // Drag & släpp (mus)
+    slot.addEventListener('dragover', e=>{ e.preventDefault(); slot.classList.add('mal'); });
+    slot.addEventListener('dragleave', ()=> slot.classList.remove('mal'));
+    slot.addEventListener('drop', e=>{
+      e.preventDefault(); slot.classList.remove('mal');
+      const del = e.dataTransfer.getData('text/plain');
+      const brik = $(`#palett .brik[data-del="${del}"]`);
+      if(brik){ valdBrik = { el:brik, del }; slotKlick(slot); }
+    });
+  });
+}
+function skapaBrik(delId){
+  const d = delMap[delId];
+  const b = document.createElement('button');
+  b.className = 'brik';
+  b.dataset.del = delId;
+  b.draggable = true;
+  b.style.setProperty('--f', farg(delId));
+  b.innerHTML = `${d.emoji} ${d.namn.toUpperCase()}`;
+  b.addEventListener('click', ()=>{
+    if(valdBrik && valdBrik.el === b){ b.classList.remove('vald'); valdBrik = null; return; }
+    $$('#palett .brik').forEach(x=>x.classList.remove('vald'));
+    b.classList.add('vald'); valdBrik = { el:b, del:delId };
+    ljud.klick();
+  });
+  b.addEventListener('dragstart', e=> e.dataTransfer.setData('text/plain', delId));
+  return b;
+}
+function slotKlick(slot){
+  if(byggLast) return;
+  const rad = slot.closest('.lat-block');
+  if(rad.classList.contains('ratt')) return;   // låst korrekt block
+
+  // Ta tillbaka en redan placerad kloss
+  if(slot.dataset.del){
+    $('#palett').appendChild(skapaBrik(slot.dataset.del));
+    delete slot.dataset.del;
+    slot.className = 'slot'; slot.textContent = '?';
+    slot.style.removeProperty('--f');
+    ljud.flip();
+    return;
+  }
+  if(!valdBrik){ toast('Tryck först på en kloss här ovanför – tryck sedan på rutan.'); return; }
+
+  slot.dataset.del = valdBrik.del;
+  slot.className = 'slot fylld';
+  slot.style.setProperty('--f', farg(valdBrik.del));
+  slot.innerHTML = `${delMap[valdBrik.del].emoji} ${delMap[valdBrik.del].namn.toUpperCase()}`;
+  valdBrik.el.remove(); valdBrik = null;
+  ljud.flip();
+}
+$('#byggNollstall').addEventListener('click', ()=>{ byggUpp(); ljud.klick(); });
+$('#byggKolla').addEventListener('click', ()=>{
+  const rader = $$('#latLista .lat-block');
+  let ratt = 0, tomma = 0, forstaFel = null;
+
+  rader.forEach(rad=>{
+    const i = +rad.dataset.i, slot = rad.querySelector('.slot');
+    const svar = slot.dataset.del, facit = LATEN[i].del;
+    rad.classList.remove('fel');
+    if(!svar){ tomma++; return; }
+    if(svar === facit){ ratt++; rad.classList.add('ratt'); }
+    else{
+      rad.classList.add('fel');
+      if(!forstaFel) forstaFel = { svar, facit };
+      // fel kloss åker tillbaka till paletten
+      $('#palett').appendChild(skapaBrik(svar));
+      delete slot.dataset.del;
+      slot.className = 'slot'; slot.textContent = '?'; slot.style.removeProperty('--f');
+    }
+  });
+  $('#byggRatt').textContent = ratt;
+
+  if(ratt === LATEN.length){
+    byggLast = true; ljud.vinst();
+    toast('🏆 Hela låten är rätt byggd! Du kan läsa av en låt som en riktig musiker.', 'bra');
+  } else if(tomma > 0 && !forstaFel){
+    toast(`Bra jobbat så långt – ${ratt} rätt! Fyll i rutorna som är kvar.`);
+    ljud.klick();
+  } else if(forstaFel){
+    const s = delMap[forstaFel.svar], f = delMap[forstaFel.facit];
+    ljud.fel();
+    toast(`❌ Där passade inte <b>${s.namn}</b>. Rätt del är <b>${f.namn}</b> – ${f.kort} <br>${ratt} rätt hittills.`, 'daligt');
+  }
+});
+
+/* =========================================================
+   TESTET
+   ========================================================= */
+const test = { fragor:[], nr:0, poang:0, svarat:false, statistik:{} };
+
+function startaTest(){
+  test.fragor = blanda(FRAGOR).slice(0, KONFIG.ANTAL_FRAGOR);
+  test.nr = 0; test.poang = 0; test.statistik = {};
+  $('#testStart').classList.add('dold');
+  $('#testResultat').classList.add('dold');
+  $('#testSpel').classList.remove('dold');
+  visaFraga();
+}
+function visaFraga(){
+  test.svarat = false;
+  const q = test.fragor[test.nr];
+  $('#testNr').textContent = test.nr + 1;
+  $('#testPoang').textContent = test.poang;
+  $('#testProgress').style.width = (test.nr / KONFIG.ANTAL_FRAGOR * 100) + '%';
+  $('#testFraga').innerHTML = q.f;
+  $('#testFeedback').innerHTML = '';
+  $('#testNasta').classList.add('dold');
+
+  const box = $('#testSvar');
+  box.innerHTML = '';
+  blanda([q.r, ...q.fel]).forEach(alt=>{           // slumpad svarsposition varje gång
+    const b = document.createElement('button');
+    b.className = 'svar';
+    b.textContent = alt;
+    b.addEventListener('click', ()=> svara(b, alt, q));
+    box.appendChild(b);
+  });
+}
+function svara(knapp, alt, q){
+  if(test.svarat) return;
+  test.svarat = true;
+  const korrekt = alt === q.r;
+  const st = test.statistik[q.del] || (test.statistik[q.del] = {ratt:0, tot:0});
+  st.tot++;
+
+  $$('#testSvar .svar').forEach(b=>{
+    b.disabled = true;
+    if(b.textContent === q.r) b.classList.add('ratt');
+  });
+  if(!korrekt) knapp.classList.add('fel');
+
+  const d = delMap[q.del];
+  if(korrekt){
+    test.poang++; st.ratt++; ljud.ratt();
+    $('#testFeedback').innerHTML =
+      `<div class="mikrolektion bra"><b>Rätt!</b> ${q.forkl}</div>`;
+  } else {
+    ljud.fel();
+    $('#testFeedback').innerHTML =
+      `<div class="mikrolektion"><b>Rätt svar: ${q.r}.</b> ${q.forkl}
+       <br><span style="color:var(--text-dim)">${d.emoji} ${d.namn}: ${d.kort}</span></div>`;
+  }
+  $('#testPoang').textContent = test.poang;
+  $('#testNasta').classList.remove('dold');
+  $('#testNasta').textContent = (test.nr + 1 < KONFIG.ANTAL_FRAGOR) ? 'Nästa ➜' : 'Se resultat ➜';
+}
+$('#testNasta').addEventListener('click', ()=>{
+  test.nr++;
+  if(test.nr < KONFIG.ANTAL_FRAGOR) visaFraga(); else visaResultat();
+});
+function visaResultat(){
+  $('#testSpel').classList.add('dold');
+  $('#testResultat').classList.remove('dold');
+  $('#testProgress').style.width = '100%';
+
+  const p = test.poang, max = KONFIG.ANTAL_FRAGOR;
+  const stjarnor = p >= max ? 3 : p >= Math.ceil(max*0.75) ? 2 : p >= Math.ceil(max*0.5) ? 1 : 0;
+  $('#resStjarnor').textContent = '★'.repeat(stjarnor) + '☆'.repeat(3 - stjarnor);
+  $('#resPoang').textContent = p;
+  $('#resText').innerHTML =
+    p === max ? '🏆 Perfekt! Du kan låtens delar utan och innan.' :
+    p >= max*0.75 ? '🎶 Snyggt jobbat! Bara några delar kvar att spika.' :
+    p >= max*0.5 ? '🎵 Bra början! Läs ordlistan en gång till och kör igen.' :
+    '📖 Ta en runda i ordlistan och memoryt först – kom sedan tillbaka hit!';
+
+  const rek = LS.las('test_rekord', null);
+  if(rek === null || p > rek){ LS.skriv('test_rekord', p); }
+  visaTestRekord();
+
+  // Mastery per låtdel: bäst på / behöver träna
+  const m = $('#resMastery'); m.innerHTML = '';
+  Object.entries(test.statistik)
+    .sort((a,b)=> (b[1].ratt/b[1].tot) - (a[1].ratt/a[1].tot))
+    .forEach(([id, s])=>{
+      const d = delMap[id];
+      const div = document.createElement('div');
+      div.style.setProperty('--f', farg(id));
+      const ikon = s.ratt === s.tot ? '💪' : s.ratt === 0 ? '📚' : '👍';
+      div.innerHTML = `${ikon} ${d.emoji} ${d.namn} <span>${s.ratt}/${s.tot}</span>`;
+      m.appendChild(div);
+    });
+
+  if(p >= max*0.75) ljud.vinst();
+}
+function visaTestRekord(){
+  const r = LS.las('test_rekord', null);
+  $('#testRekord').textContent = r === null ? '–' : r;
+}
+$('#testStarta').addEventListener('click', ()=>{ ljud.klick(); startaTest(); });
+$('#testIgen').addEventListener('click', ()=>{ ljud.klick(); startaTest(); });
+$('#testTillOrdlista').addEventListener('click', ()=> visaLage('ordlista'));
+
+/* =========================================================
+   START
+   ========================================================= */
+byggOrdlista();
+startaMemory(6);
+byggUpp();
+visaTestRekord();
+$('#ljudKnapp').textContent = ljudPa ? '🔊 Ljud på' : '🔇 Ljud av';
+</script>
+</body>
+</html>
