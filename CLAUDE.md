@@ -4,7 +4,7 @@ Pedagogiskt webbspel om **låtdelar** (intro, vers, brygga, refräng, stick, out
 riff, mellanspel, ad-lib) för musik åk 4–6. Ska ligga på Dannes skolhemsida.
 
 ## Vad det är
-- **En enda självbärande HTML-fil**: `latdelar-spelet.html`. Inga externa filer, inget
+- **En enda självbärande HTML-fil**: `index.html`. Inga externa filer, inget
   bygge, ingen server. Öppnas med dubbelklick eller laddas upp som den är.
 - Fyra lägen: **Ordlista** (lär dig), **Memory** (ord ↔ betydelse), **Bygg låten**
   (placera delarnas namn på rätt textblock i "Regn på rutan"), **Testet** (8 frågor).
@@ -27,3 +27,4 @@ dokument `Latdelar-ordlista.docx` – texterna är återgivna ordagrant i `DELAR
 - Touch: allt funkar med tryck (välj kloss → tryck ruta). Drag & släpp finns som bonus
   för mus. Lägg inte in mönster som kräver hover.
 - Öka versionsnumret i `<title>` vid varje leverans.
+- Filen heter `index.html` för att GitHub Pages ska servera den på repots rot-URL.
