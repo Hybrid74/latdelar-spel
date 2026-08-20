@@ -43,13 +43,19 @@ html,body{margin:0; padding:0; height:100%}
 body{
   font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
   color:var(--text);
+  background:var(--bg3);           /* solid botten – gradienten ligger i .bakgrund */
+  overflow:hidden;                 /* sidan scrollar inte – bara innehållsrutorna */
+  -webkit-text-size-adjust:100%;
+}
+/* Gradienten ligger i ett EGET fast lager, inte på <body>. Chrome slutar propagera
+   body-bakgrunden till sidytan när body har overflow:hidden – då blev sidan vit
+   med ljus text på den publicerade sidan (buggen i v1.1 innan rättningen). */
+.bakgrund{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
   background:
     radial-gradient(1100px 800px at 12% 0%, #4a2590 0%, transparent 62%),
     radial-gradient(900px 700px at 92% 8%, #235c8f 0%, transparent 58%),
     linear-gradient(160deg, var(--bg1), var(--bg2) 45%, var(--bg3));
-  background-attachment:fixed;
-  overflow:hidden;                 /* sidan scrollar inte – bara innehållsrutorna */
-  -webkit-text-size-adjust:100%;
 }
 
 /* ---------- Dekor: notlinjer + svävande noter ---------- */
@@ -334,6 +340,7 @@ body.kort .vinyl{width:36px;height:36px}
 </head>
 <body>
 
+<div class="bakgrund"></div>
 <div class="notlinjer"></div>
 <div class="noter" id="noter"></div>
 <div id="toast" role="status" aria-live="polite"></div>
