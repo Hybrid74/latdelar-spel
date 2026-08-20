@@ -3,16 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Låtens delar – spelet v1.0</title>
+<title>Låtens delar – spelet v1.1</title>
 <style>
 /* ============================================================
    LÅTENS DELAR – pedagogiskt webbspel (åk 4–6, musik)
    En enda självbärande HTML-fil. Inga externa filer, ingen server.
+
+   v1.1: layouten är byggd för Chromebook (låg skärmhöjd).
+   Appen är exakt en skärmhöjd hög – rutnät och listor krymper
+   eller scrollar INUTI sina rutor, så sidan i sig scrollar inte.
    ============================================================ */
 
 :root{
-  --bg1:#140b2e; --bg2:#241250; --bg3:#0b0720;
-  --panel:rgba(255,255,255,.07);
+  --bg1:#1c1046; --bg2:#2d1866; --bg3:#160c34;
+  --panel:rgba(255,255,255,.10);
   --panel2:rgba(255,255,255,.12);
   --linje:rgba(255,255,255,.16);
   --text:#f4f1ff;
@@ -35,162 +39,185 @@
 }
 
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
+html,body{margin:0; padding:0; height:100%}
 body{
-  min-height:100vh;
   font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
   color:var(--text);
   background:
-    radial-gradient(1200px 700px at 15% -10%, #3a1d6e 0%, transparent 60%),
-    radial-gradient(900px 600px at 90% 0%, #1d4d7a 0%, transparent 55%),
+    radial-gradient(1100px 800px at 12% 0%, #4a2590 0%, transparent 62%),
+    radial-gradient(900px 700px at 92% 8%, #235c8f 0%, transparent 58%),
     linear-gradient(160deg, var(--bg1), var(--bg2) 45%, var(--bg3));
   background-attachment:fixed;
-  overflow-x:hidden;
+  overflow:hidden;                 /* sidan scrollar inte – bara innehållsrutorna */
   -webkit-text-size-adjust:100%;
 }
 
 /* ---------- Dekor: notlinjer + svävande noter ---------- */
 .notlinjer{
-  position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.16;
+  position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.14;
   background:repeating-linear-gradient(to bottom, transparent 0 44px, rgba(255,255,255,.5) 44px 45px);
   mask-image:linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent);
   -webkit-mask-image:linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent);
 }
 .noter{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
-.not{position:absolute; bottom:-60px; font-size:26px; opacity:.22; animation:flyt linear infinite}
+.not{position:absolute; bottom:-60px; font-size:26px; opacity:.2; animation:flyt linear infinite}
 @keyframes flyt{
   0%{transform:translateY(0) rotate(0deg); opacity:0}
-  10%{opacity:.28}
-  90%{opacity:.18}
+  10%{opacity:.26}
+  90%{opacity:.16}
   100%{transform:translateY(-108vh) rotate(28deg); opacity:0}
 }
 @media (prefers-reduced-motion: reduce){ .not{display:none} }
 
-/* ---------- Ram ---------- */
-.wrap{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:18px 16px 60px}
+/* ---------- Appskal: exakt en skärmhöjd ---------- */
+.app{
+  position:relative; z-index:1;
+  display:flex; flex-direction:column; gap:8px;
+  height:100vh; height:100dvh;
+  max-width:1180px; margin:0 auto; padding:10px 12px 12px;
+}
 
 header.topp{
-  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-  padding:14px 18px; margin-bottom:14px;
-  background:var(--panel); border:1px solid var(--linje); border-radius:20px;
-  backdrop-filter:blur(6px);
+  flex:0 0 auto;
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:8px 14px;
+  background:var(--panel); border:1px solid var(--linje); border-radius:16px;
 }
 .vinyl{
-  width:62px;height:62px;border-radius:50%;flex:0 0 auto;
+  width:44px;height:44px;border-radius:50%;flex:0 0 auto;
   background:
-    radial-gradient(circle at 50% 50%, #ffd166 0 7px, #241a10 7px 9px, transparent 9px),
+    radial-gradient(circle at 50% 50%, #ffd166 0 5px, #241a10 5px 7px, transparent 7px),
     repeating-radial-gradient(circle at 50% 50%, #1a1526 0 3px, #2a2340 3px 6px);
-  box-shadow:0 6px 20px rgba(0,0,0,.45), inset 0 0 0 2px rgba(255,255,255,.08);
+  box-shadow:0 4px 14px rgba(0,0,0,.45), inset 0 0 0 2px rgba(255,255,255,.08);
   animation:snurr 7s linear infinite;
 }
 @keyframes snurr{to{transform:rotate(360deg)}}
-h1{margin:0; font-size:clamp(22px,4.4vw,34px); letter-spacing:.5px}
-h1 small{display:block; font-size:14px; font-weight:500; color:var(--text-dim); letter-spacing:0; margin-top:3px}
+h1{margin:0; font-size:clamp(17px,2.9vh,26px); letter-spacing:.4px; line-height:1.15}
+h1 small{display:block; font-size:13px; font-weight:500; color:var(--text-dim); letter-spacing:0; margin-top:2px}
 .topp .space{flex:1}
+.topp .verktyg{display:flex; gap:6px; flex-wrap:wrap}
 
 button{font:inherit; cursor:pointer}
 .knapp{
   border:1px solid var(--linje); background:var(--panel2); color:var(--text);
-  padding:10px 16px; border-radius:999px; font-weight:600; transition:transform .12s, background .15s;
+  padding:8px 14px; border-radius:999px; font-weight:600; transition:transform .12s, background .15s;
+  white-space:nowrap;
 }
 .knapp:hover{background:rgba(255,255,255,.2)}
 .knapp:active{transform:scale(.96)}
 .knapp.primar{background:linear-gradient(135deg,#ffd166,#ff9f5a); color:#2a1a05; border-color:transparent}
-.knapp.stor{padding:14px 26px; font-size:17px}
+.knapp.liten{padding:7px 12px; font-size:14px}
 
 /* ---------- Flikar ---------- */
-nav.flikar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px}
+nav.flikar{flex:0 0 auto; display:flex; gap:6px}
 nav.flikar button{
-  flex:1 1 150px; padding:13px 10px; border-radius:16px; font-weight:700; font-size:16px;
+  flex:1 1 0; min-width:0; padding:10px 6px; border-radius:14px; font-weight:700;
+  font-size:clamp(13px,1.9vh,16px);
   background:var(--panel); color:var(--text-dim); border:1px solid var(--linje);
-  transition:.15s;
+  transition:.15s; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 nav.flikar button:hover{color:var(--text); background:var(--panel2)}
 nav.flikar button.aktiv{
   background:linear-gradient(135deg,#ffd166,#ff9f5a); color:#2a1a05; border-color:transparent;
-  box-shadow:0 8px 22px rgba(255,160,80,.28);
+  box-shadow:0 6px 18px rgba(255,160,80,.26);
 }
 
-.skarm{display:none; animation:in .25s ease}
-.skarm.aktiv{display:block}
-@keyframes in{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+/* ---------- Skärmar ---------- */
+main.scen{flex:1; min-height:0; position:relative}
+.skarm{position:absolute; inset:0; display:none; flex-direction:column; gap:8px; min-height:0}
+.skarm.aktiv{display:flex; animation:in .22s ease}
+@keyframes in{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
 
 .panel{
-  background:var(--panel); border:1px solid var(--linje); border-radius:20px;
-  padding:18px; margin-bottom:16px; backdrop-filter:blur(6px);
+  background:var(--panel); border:1px solid var(--linje); border-radius:16px;
+  padding:12px 14px; min-height:0;
 }
-.panel h2{margin:0 0 6px; font-size:20px}
-.panel p.info{margin:0 0 12px; color:var(--text-dim); line-height:1.5}
+.panel.fyll{flex:1; display:flex; flex-direction:column; min-height:0}
+.panel h2{margin:0 0 4px; font-size:clamp(15px,2.2vh,20px)}
+.panel p.info{margin:0 0 8px; color:var(--text-dim); line-height:1.45; font-size:clamp(13px,1.75vh,15px)}
+/* På låga skärmar (Chromebook) göms instruktionstexten tills eleven trycker ❓ */
+body.kort .info{display:none}
+body.kort.hjalp .info{display:block}
+
+.scrollyta{flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-right:4px}
+.scrollyta::-webkit-scrollbar{width:10px}
+.scrollyta::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22); border-radius:99px}
 
 /* ---------- Ordlista ---------- */
-.ordkort-rutnat{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px}
+.ordkort-rutnat{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px}
 .ordkort{
   --f:var(--c-vers);
-  position:relative; border-radius:18px; padding:16px 16px 14px;
+  border-radius:16px; padding:12px 14px;
   background:linear-gradient(160deg, color-mix(in srgb, var(--f) 22%, transparent), rgba(255,255,255,.05));
   border:1px solid color-mix(in srgb, var(--f) 45%, transparent);
-  box-shadow:0 8px 24px rgba(0,0,0,.25);
   text-align:left; width:100%; color:var(--text);
 }
 .ordkort:hover{background:linear-gradient(160deg, color-mix(in srgb, var(--f) 32%, transparent), rgba(255,255,255,.08))}
-.ordkort .emoji{font-size:26px}
-.ordkort h3{margin:6px 0 2px; font-size:20px; color:var(--f)}
-.ordkort .eng{font-size:13px; color:var(--text-dim); font-style:italic; margin-bottom:8px}
-.ordkort .def{line-height:1.5; font-size:15px}
+.ordkort .emoji{font-size:22px}
+.ordkort h3{margin:4px 0 1px; font-size:18px; color:var(--f)}
+.ordkort .eng{font-size:12px; color:var(--text-dim); font-style:italic; margin-bottom:6px}
+.ordkort .def{line-height:1.45; font-size:14px}
 .ordkort .ex{
-  margin-top:10px; font-size:14px; line-height:1.45; color:var(--text-dim);
-  border-left:3px solid var(--f); padding-left:10px;
+  margin-top:8px; font-size:13px; line-height:1.4; color:var(--text-dim);
+  border-left:3px solid var(--f); padding-left:9px;
 }
 .ordkort .ex b{color:var(--f)}
+.underrubrik{margin:16px 0 8px; font-size:17px}
 
-/* Strukturtrappa */
-.trappa{display:flex; flex-direction:column; gap:6px; max-width:420px}
+/* Strukturtrappa – vågrätt band så den inte äter höjd */
+.trappa{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px}
 .trappa .steg{
   --f:var(--c-vers);
-  display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:12px;
+  display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px;
   background:color-mix(in srgb, var(--f) 26%, transparent);
-  border-left:6px solid var(--f); font-weight:700; letter-spacing:1px;
+  border:1px solid color-mix(in srgb, var(--f) 60%, transparent);
+  font-weight:700; letter-spacing:.6px; font-size:13px;
 }
-.trappa .steg span.nr{opacity:.55; font-weight:600; width:22px; text-align:right}
+.trappa .steg span.nr{opacity:.55; font-weight:600}
 
-.kom-ihag{border-left:5px solid var(--guld); background:rgba(255,209,102,.12)}
-.kom-ihag ul{margin:8px 0 0; padding-left:20px; line-height:1.6}
+.kom-ihag{border-left:5px solid var(--guld); background:rgba(255,209,102,.12);
+  border-radius:14px; padding:12px 14px; margin-top:16px}
+.kom-ihag ul{margin:6px 0 0; padding-left:20px; line-height:1.55; font-size:14px}
 
-/* ---------- Memory ---------- */
-.rad{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px}
+/* ---------- Verktygsrad ---------- */
+.rad{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
 .statruta{
-  display:flex; gap:8px; align-items:center; padding:8px 14px; border-radius:12px;
+  display:flex; gap:6px; align-items:center; padding:6px 12px; border-radius:10px;
   background:rgba(0,0,0,.25); border:1px solid var(--linje); font-weight:700;
+  font-size:clamp(13px,1.8vh,15px);
 }
 .statruta small{color:var(--text-dim); font-weight:600}
 
-.memory-bord{display:grid; gap:10px; grid-template-columns:repeat(4,1fr); max-width:720px; margin:0 auto}
-.memory-bord.bred{grid-template-columns:repeat(5,1fr); max-width:900px}
-@media(max-width:700px){
-  .memory-bord, .memory-bord.bred{grid-template-columns:repeat(3,1fr); gap:7px}
+/* ---------- Memory ---------- */
+.memory-vy{flex:1; min-height:0; display:flex; align-items:center; justify-content:center; margin-top:8px}
+.memory-bord{
+  --kol:4; --rader:3;
+  display:grid;
+  grid-template-columns:repeat(var(--kol), 1fr);
+  grid-template-rows:repeat(var(--rader), 1fr);
+  gap:8px;
+  margin:0 auto;   /* exakt bredd/höjd sätts av satMemoryRutnat() i px */
 }
-.kort{
-  position:relative; aspect-ratio:4/5; perspective:900px; background:none; border:0; padding:0;
-}
+.kort{position:relative; perspective:900px; background:none; border:0; padding:0; min-width:0; min-height:0}
 .kort .sida{
-  position:absolute; inset:0; border-radius:14px; display:flex; align-items:center; justify-content:center;
-  text-align:center; padding:8px; backface-visibility:hidden; transition:transform .45s;
-  box-shadow:0 6px 18px rgba(0,0,0,.35); overflow:hidden;
+  position:absolute; inset:0; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  text-align:center; padding:6px; backface-visibility:hidden; transition:transform .4s;
+  box-shadow:0 5px 14px rgba(0,0,0,.35); overflow:hidden; hyphens:auto;
 }
 .kort .bak{
   background:
     radial-gradient(circle at 50% 42%, rgba(255,255,255,.18) 0 30%, transparent 62%),
     linear-gradient(150deg,#3b2a72,#6a3fa0);
-  border:1px solid rgba(255,255,255,.22); font-size:30px;
+  border:1px solid rgba(255,255,255,.22); font-size:clamp(18px,3.4vh,30px);
 }
 .kort .fram{
   --f:var(--c-vers);
   transform:rotateY(180deg);
   background:linear-gradient(160deg, color-mix(in srgb, var(--f) 55%, #12102a), #191636);
   border:2px solid var(--f); color:#fff;
-  font-size:13px; line-height:1.3; font-weight:600;
+  font-size:clamp(9px,1.5vh,14px); line-height:1.25; font-weight:600;
 }
-.kort .fram.ord{font-size:clamp(15px,3.4vw,21px); font-weight:800; letter-spacing:.5px; color:var(--f)}
+.kort .fram.ord{font-size:clamp(12px,2.4vh,21px); font-weight:800; letter-spacing:.4px; color:var(--f)}
 .kort.vand .bak{transform:rotateY(-180deg)}
 .kort.vand .fram{transform:rotateY(0)}
 .kort.klar .fram{border-color:var(--ok); box-shadow:0 0 0 3px rgba(92,225,164,.35); opacity:.85}
@@ -198,27 +225,38 @@ nav.flikar button.aktiv{
 @keyframes puls{50%{transform:scale(1.06)}}
 
 /* ---------- Bygg låten ---------- */
-.palett{display:flex; flex-wrap:wrap; gap:8px; min-height:52px; padding:10px;
-  background:rgba(0,0,0,.22); border:1px dashed var(--linje); border-radius:14px}
+.palett{display:flex; flex-wrap:wrap; gap:6px; padding:8px;
+  background:rgba(0,0,0,.22); border:1px dashed var(--linje); border-radius:12px; margin:6px 0 8px}
 .brik{
   --f:var(--c-vers);
-  padding:9px 16px; border-radius:999px; font-weight:800; letter-spacing:1px; font-size:15px;
+  padding:6px 13px; border-radius:999px; font-weight:800; letter-spacing:.7px;
+  font-size:clamp(12px,1.75vh,15px);
   background:color-mix(in srgb, var(--f) 80%, #101025); color:#16112b;
-  border:2px solid color-mix(in srgb, var(--f) 90%, #fff); box-shadow:0 4px 12px rgba(0,0,0,.3);
+  border:2px solid color-mix(in srgb, var(--f) 90%, #fff); box-shadow:0 3px 10px rgba(0,0,0,.3);
   transition:transform .12s;
 }
 .brik:active{transform:scale(.94)}
 .brik.vald{outline:3px solid #fff; outline-offset:2px; transform:translateY(-3px)}
 
-.lat-lista{display:flex; flex-direction:column; gap:10px; margin-top:14px}
+.lat-lista{display:flex; flex-direction:column; gap:6px}
+/* Breda men låga skärmar (Chromebook): låten i två spalter så hela bygget syns utan att scrolla.
+   Kolumnflöde = block 1–5 i vänsterspalten, 6–10 i höger, dvs samma ordning som låten spelas. */
+@media (min-width:900px){
+  .lat-lista{
+    display:grid; grid-auto-flow:column;
+    grid-template-columns:repeat(2,1fr);
+    grid-template-rows:repeat(5,min-content);
+    gap:5px 10px; align-content:start;
+  }
+}
 .lat-block{
-  display:flex; gap:12px; align-items:stretch;
-  background:rgba(255,255,255,.05); border:1px solid var(--linje); border-radius:14px; padding:10px;
+  display:flex; gap:10px; align-items:stretch;
+  background:rgba(255,255,255,.05); border:1px solid var(--linje); border-radius:12px; padding:5px 6px;
 }
 .lat-block .slot{
-  flex:0 0 132px; border:2px dashed rgba(255,255,255,.3); border-radius:12px;
+  flex:0 0 122px; border:2px dashed rgba(255,255,255,.3); border-radius:10px;
   display:flex; align-items:center; justify-content:center; color:var(--text-dim);
-  font-weight:800; letter-spacing:1px; font-size:14px; background:rgba(0,0,0,.18); min-height:56px;
+  font-weight:800; letter-spacing:.7px; font-size:13px; background:rgba(0,0,0,.18); min-height:40px;
   padding:4px; text-align:center;
 }
 .lat-block .slot.fylld{--f:var(--c-vers); border-style:solid; border-color:var(--f);
@@ -227,18 +265,20 @@ nav.flikar button.aktiv{
 .lat-block.ratt{border-color:var(--ok); box-shadow:0 0 0 2px rgba(92,225,164,.25)}
 .lat-block.fel{animation:skak .35s}
 @keyframes skak{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
-.lat-block .rad-text{flex:1; white-space:pre-line; line-height:1.5; font-size:15px; align-self:center}
+.lat-block .rad-text{flex:1; white-space:pre-line; line-height:1.35; font-size:clamp(12px,1.7vh,15px); align-self:center}
 .lat-block .rad-text i{color:var(--text-dim)}
 @media(max-width:560px){
-  .lat-block{flex-direction:column}
+  .lat-block{flex-direction:column; gap:6px}
   .lat-block .slot{flex:none; width:100%}
 }
 
 /* ---------- Test ---------- */
-.fraga-box{font-size:clamp(17px,3.2vw,22px); font-weight:700; line-height:1.45; margin:6px 0 16px}
-.svar-rutnat{display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.test-mitt{flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center}
+.fraga-box{font-size:clamp(15px,2.5vh,22px); font-weight:700; line-height:1.35; margin:4px 0 10px}
+.svar-rutnat{display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .svar{
-  padding:15px 16px; border-radius:14px; text-align:left; font-size:16px; font-weight:600;
+  padding:clamp(9px,1.6vh,15px) 14px; border-radius:12px; text-align:left;
+  font-size:clamp(13px,1.9vh,16px); font-weight:600;
   background:var(--panel2); border:1px solid var(--linje); color:var(--text); transition:.15s;
 }
 .svar:hover:not(:disabled){background:rgba(255,255,255,.22); transform:translateY(-2px)}
@@ -246,38 +286,50 @@ nav.flikar button.aktiv{
 .svar.ratt{background:linear-gradient(135deg,#2f9d6f,#5ce1a4); color:#062016; border-color:transparent}
 .svar.fel{background:linear-gradient(135deg,#8e2f45,#ff7a8a); color:#2b0710; border-color:transparent}
 
-.progress{height:10px; border-radius:999px; background:rgba(0,0,0,.3); overflow:hidden; margin-bottom:14px}
+.progress{height:8px; border-radius:999px; background:rgba(0,0,0,.3); overflow:hidden; margin-bottom:8px}
 .progress i{display:block; height:100%; background:linear-gradient(90deg,#ffd166,#ff9f5a); width:0; transition:width .3s}
 
 .mikrolektion{
-  margin-top:14px; padding:14px 16px; border-radius:14px; line-height:1.55;
+  margin-top:10px; padding:10px 14px; border-radius:12px; line-height:1.45;
+  font-size:clamp(13px,1.8vh,15px);
   border-left:5px solid var(--guld); background:rgba(255,209,102,.14);
 }
 .mikrolektion.bra{border-left-color:var(--ok); background:rgba(92,225,164,.14)}
 .mikrolektion b{color:var(--guld)}
 .mikrolektion.bra b{color:var(--ok)}
 
-.resultat{text-align:center; padding:14px}
-.resultat .stora{font-size:clamp(38px,9vw,64px); font-weight:900; color:var(--guld); line-height:1.1}
-.stjarnor{font-size:36px; letter-spacing:6px; margin:6px 0 4px}
-.mastery{display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:16px; text-align:left}
-.mastery div{--f:var(--c-vers); padding:9px 12px; border-radius:12px; font-weight:700;
+.resultat{text-align:center; padding:6px}
+.resultat .stora{font-size:clamp(30px,7vh,58px); font-weight:900; color:var(--guld); line-height:1.1}
+.stjarnor{font-size:clamp(24px,4.5vh,36px); letter-spacing:6px}
+.resultat p{font-size:clamp(14px,2vh,18px); line-height:1.4; margin:6px 0}
+.mastery{display:grid; gap:6px; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:10px; text-align:left}
+.mastery div{--f:var(--c-vers); padding:7px 11px; border-radius:10px; font-weight:700; font-size:14px;
   background:color-mix(in srgb, var(--f) 22%, transparent); border-left:5px solid var(--f)}
 .mastery div span{float:right; font-weight:800}
 
 /* ---------- Toast ---------- */
 #toast{
-  position:fixed; left:50%; top:16px; transform:translate(-50%,-140%); z-index:50;
-  padding:13px 22px; border-radius:14px; font-weight:700; max-width:min(92vw,520px);
+  position:fixed; left:50%; top:10px; transform:translate(-50%,-150%); z-index:50;
+  padding:11px 20px; border-radius:12px; font-weight:700; max-width:min(92vw,540px);
   background:#20183f; border:1px solid var(--linje); box-shadow:0 12px 30px rgba(0,0,0,.5);
-  transition:transform .28s; line-height:1.4; text-align:center;
+  transition:transform .28s; line-height:1.35; text-align:center; font-size:15px;
 }
 #toast.visa{transform:translate(-50%,0)}
 #toast.bra{background:linear-gradient(135deg,#1d6b4d,#2f9d6f)}
 #toast.daligt{background:linear-gradient(135deg,#7a2436,#b83e55)}
 
-footer{text-align:center; color:var(--text-dim); font-size:13px; margin-top:26px}
+.fot{flex:0 0 auto; text-align:center; color:var(--text-dim); font-size:12px}
+body.kort .fot{display:none}
+body.kort h1 small{display:none}
+body.kort .vinyl{width:36px;height:36px}
+
 .dold{display:none !important}
+
+/* Väldigt låga fönster (t.ex. liten inbäddad ram): tillåt sidscroll som nödutgång */
+@media (max-height:420px){
+  body{overflow:auto}
+  .app{height:auto; min-height:100vh}
+}
 </style>
 </head>
 <body>
@@ -286,7 +338,7 @@ footer{text-align:center; color:var(--text-dim); font-size:13px; margin-top:26px
 <div class="noter" id="noter"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
-<div class="wrap">
+<div class="app">
 
   <header class="topp">
     <div class="vinyl" aria-hidden="true"></div>
@@ -294,7 +346,11 @@ footer{text-align:center; color:var(--text-dim); font-size:13px; margin-top:26px
       <small>Lär dig hur en låt är byggd – ord, memory, bygge och test</small>
     </h1>
     <div class="space"></div>
-    <button class="knapp" id="ljudKnapp" title="Slå på eller av ljudet">🔇 Ljud av</button>
+    <div class="verktyg">
+      <button class="knapp liten" id="hjalpKnapp" title="Visa eller dölj instruktionerna">❓ Hjälp</button>
+      <button class="knapp liten" id="helskarmKnapp" title="Helskärm">⛶ Helskärm</button>
+      <button class="knapp liten" id="ljudKnapp" title="Slå på eller av ljudet">🔇 Ljud av</button>
+    </div>
   </header>
 
   <nav class="flikar" id="flikar">
@@ -304,113 +360,120 @@ footer{text-align:center; color:var(--text-dim); font-size:13px; margin-top:26px
     <button data-lage="test">🎯 Testet</button>
   </nav>
 
-  <!-- ===================== ORDLISTA ===================== -->
-  <section class="skarm aktiv" id="skarm-ordlista">
-    <div class="panel">
-      <h2>🎼 Så spelas många låtar – uppifrån och ner</h2>
-      <p class="info">En låt är byggd av olika delar, precis som ett lego-bygge av olika klossar.
-        Varje del har sin egen färg som följer med hela vägen genom spelet.</p>
-      <div class="trappa" id="trappa"></div>
-    </div>
+  <main class="scen">
 
-    <div class="panel">
-      <h2>📚 Ordlista – vad betyder orden?</h2>
-      <p class="info">Läs korten innan du spelar. Tryck på ett kort för att höra dess ton.</p>
-      <div class="ordkort-rutnat" id="ordlistaHuvud"></div>
-    </div>
+    <!-- ===================== ORDLISTA ===================== -->
+    <section class="skarm aktiv" id="skarm-ordlista">
+      <div class="panel fyll">
+        <h2>🎼 Så spelas många låtar – uppifrån och ner</h2>
+        <p class="info">En låt är byggd av olika delar, precis som ett lego-bygge av olika klossar.
+          Varje del har sin egen färg som följer med hela vägen genom spelet.
+          Tryck på ett ordkort för att höra dess ton.</p>
+        <div class="scrollyta">
+          <div class="trappa" id="trappa"></div>
 
-    <div class="panel">
-      <h2>➕ Fler bra ord</h2>
-      <div class="ordkort-rutnat" id="ordlistaExtra"></div>
-    </div>
+          <h3 class="underrubrik">📚 Ordlista – vad betyder orden?</h3>
+          <div class="ordkort-rutnat" id="ordlistaHuvud"></div>
 
-    <div class="panel kom-ihag">
-      <h2>💡 Kom ihåg!</h2>
-      <ul>
-        <li><b>Brygga och stick är INTE samma sak.</b> Bryggan kommer precis före refrängen och bygger upp.
-          Sticket låter annorlunda och kommer oftast bara en gång.</li>
-        <li><b>En hook kan vara många olika saker</b> – en textrad, en melodi, ett ljud eller ett riff.
-          Allt som fastnar och gör låten lätt att minnas.</li>
-        <li><b>Lurigt engelska:</b> <i>bridge</i> = stick, medan svenska <i>brygga</i> heter <i>pre-chorus</i>.</li>
-      </ul>
-    </div>
-  </section>
+          <h3 class="underrubrik">➕ Fler bra ord</h3>
+          <div class="ordkort-rutnat" id="ordlistaExtra"></div>
 
-  <!-- ===================== MEMORY ===================== -->
-  <section class="skarm" id="skarm-memory">
-    <div class="panel">
-      <h2>🧠 Memory – para ihop ordet med betydelsen</h2>
-      <p class="info">Vänd två kort. Hittar du <b>ordet</b> och rätt <b>betydelse</b> stannar korten uppe.
-        Klara hela brädet på så få försök som möjligt!</p>
-      <div class="rad">
-        <button class="knapp primar" id="memNy6">▶︎ Starta: 6 par</button>
-        <button class="knapp" id="memNy10">▶︎ Utmaning: 10 par</button>
-        <div class="statruta">Försök <span id="memForsok">0</span></div>
-        <div class="statruta">Hittade <span id="memHittade">0</span><small>/<span id="memTotal">6</span></small></div>
-        <div class="statruta">🏆 Rekord <span id="memRekord">–</span></div>
-      </div>
-      <div class="memory-bord" id="memoryBord"></div>
-    </div>
-  </section>
-
-  <!-- ===================== BYGG LÅTEN ===================== -->
-  <section class="skarm" id="skarm-bygg">
-    <div class="panel">
-      <h2>🧱 Bygg låten: ”Regn på rutan”</h2>
-      <p class="info">Här är en påhittad låt – men delarnas namn saknas!
-        <b>Tryck på en kloss</b> nedan och <b>tryck sedan på rutan</b> där den hör hemma (eller dra den dit).
-        Tryck på en fylld ruta för att ta tillbaka klossen. Klicka på <b>Kontrollera</b> när du är klar.</p>
-      <div class="palett" id="palett"></div>
-      <div class="rad" style="margin-top:12px">
-        <button class="knapp primar" id="byggKolla">✔︎ Kontrollera</button>
-        <button class="knapp" id="byggNollstall">↺ Börja om</button>
-        <div class="statruta">Rätt <span id="byggRatt">0</span><small>/10</small></div>
-      </div>
-      <div class="lat-lista" id="latLista"></div>
-    </div>
-  </section>
-
-  <!-- ===================== TEST ===================== -->
-  <section class="skarm" id="skarm-test">
-    <div class="panel" id="testStart">
-      <h2>🎯 Testet</h2>
-      <p class="info">8 frågor om låtens delar. Svara du fel får du en liten förklaring direkt –
-        det är så man lär sig. Efteråt ser du vad du är bäst på och vad du behöver träna mer på.</p>
-      <div class="rad">
-        <button class="knapp primar stor" id="testStarta">▶︎ Starta testet</button>
-        <div class="statruta">🏆 Rekord <span id="testRekord">–</span><small>/8</small></div>
-      </div>
-    </div>
-
-    <div class="panel dold" id="testSpel">
-      <div class="progress"><i id="testProgress"></i></div>
-      <div class="rad" style="justify-content:space-between">
-        <div class="statruta">Fråga <span id="testNr">1</span><small>/8</small></div>
-        <div class="statruta">Rätt <span id="testPoang">0</span></div>
-      </div>
-      <div class="fraga-box" id="testFraga"></div>
-      <div class="svar-rutnat" id="testSvar"></div>
-      <div id="testFeedback"></div>
-      <div class="rad" style="margin-top:14px">
-        <button class="knapp primar dold" id="testNasta">Nästa ➜</button>
-      </div>
-    </div>
-
-    <div class="panel dold" id="testResultat">
-      <div class="resultat">
-        <div class="stjarnor" id="resStjarnor"></div>
-        <div class="stora"><span id="resPoang">0</span>/8</div>
-        <p id="resText" style="font-size:18px; line-height:1.5"></p>
-        <div class="mastery" id="resMastery"></div>
-        <div class="rad" style="justify-content:center; margin-top:18px">
-          <button class="knapp primar stor" id="testIgen">↺ Spela igen</button>
-          <button class="knapp stor" id="testTillOrdlista">📖 Till ordlistan</button>
+          <div class="kom-ihag">
+            <h3 style="margin:0">💡 Kom ihåg!</h3>
+            <ul>
+              <li><b>Brygga och stick är INTE samma sak.</b> Bryggan kommer precis före refrängen och bygger upp.
+                Sticket låter annorlunda och kommer oftast bara en gång.</li>
+              <li><b>En hook kan vara många olika saker</b> – en textrad, en melodi, ett ljud eller ett riff.
+                Allt som fastnar och gör låten lätt att minnas.</li>
+              <li><b>Lurigt engelska:</b> <i>bridge</i> = stick, medan svenska <i>brygga</i> heter <i>pre-chorus</i>.</li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <footer>Låtens delar · musik åk 4–6 · allt sparas bara i den här datorn (inga namn, inget skickas någonstans)</footer>
+    <!-- ===================== MEMORY ===================== -->
+    <section class="skarm" id="skarm-memory">
+      <div class="panel fyll">
+        <p class="info">Vänd två kort. Hittar du <b>ordet</b> och rätt <b>betydelse</b> stannar korten uppe.
+          Klara hela brädet på så få försök som möjligt!</p>
+        <div class="rad">
+          <button class="knapp primar liten" id="memNy6">▶︎ 6 par</button>
+          <button class="knapp liten" id="memNy10">▶︎ Utmaning: 10 par</button>
+          <div class="statruta">Försök <span id="memForsok">0</span></div>
+          <div class="statruta">Hittade <span id="memHittade">0</span><small>/<span id="memTotal">6</span></small></div>
+          <div class="statruta">🏆 <span id="memRekord">–</span></div>
+        </div>
+        <div class="memory-vy">
+          <div class="memory-bord" id="memoryBord"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== BYGG LÅTEN ===================== -->
+    <section class="skarm" id="skarm-bygg">
+      <div class="panel fyll">
+        <h2>🧱 Bygg låten: ”Regn på rutan”</h2>
+        <p class="info">Delarnas namn saknas! <b>Tryck på en kloss</b> och <b>tryck sedan på rutan</b>
+          där den hör hemma (eller dra den dit). Tryck på en fylld ruta för att ta tillbaka klossen.</p>
+        <div class="palett" id="palett"></div>
+        <div class="rad">
+          <button class="knapp primar liten" id="byggKolla">✔︎ Kontrollera</button>
+          <button class="knapp liten" id="byggNollstall">↺ Börja om</button>
+          <div class="statruta">Rätt <span id="byggRatt">0</span><small>/10</small></div>
+        </div>
+        <div class="scrollyta" style="margin-top:8px">
+          <div class="lat-lista" id="latLista"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TEST ===================== -->
+    <section class="skarm" id="skarm-test">
+      <div class="panel fyll">
+        <div class="test-mitt" id="testStart">
+          <h2>🎯 Testet</h2>
+          <p style="color:var(--text-dim); line-height:1.45; font-size:clamp(13px,1.9vh,16px)">
+            8 frågor om låtens delar. Svarar du fel får du en liten förklaring direkt –
+            det är så man lär sig. Efteråt ser du vad du är bäst på och vad du behöver träna mer på.</p>
+          <div class="rad" style="margin-top:10px">
+            <button class="knapp primar" id="testStarta">▶︎ Starta testet</button>
+            <div class="statruta">🏆 Rekord <span id="testRekord">–</span><small>/8</small></div>
+          </div>
+        </div>
+
+        <div class="test-mitt dold" id="testSpel">
+          <div class="progress"><i id="testProgress"></i></div>
+          <div class="rad" style="justify-content:space-between">
+            <div class="statruta">Fråga <span id="testNr">1</span><small>/8</small></div>
+            <div class="statruta">Rätt <span id="testPoang">0</span></div>
+          </div>
+          <div class="fraga-box" id="testFraga"></div>
+          <div class="svar-rutnat" id="testSvar"></div>
+          <div id="testFeedback"></div>
+          <div class="rad" style="margin-top:10px">
+            <button class="knapp primar dold" id="testNasta">Nästa ➜</button>
+          </div>
+        </div>
+
+        <div class="test-mitt dold" id="testResultat">
+          <div class="resultat">
+            <div class="stjarnor" id="resStjarnor"></div>
+            <div class="stora"><span id="resPoang">0</span>/8</div>
+            <p id="resText"></p>
+            <div class="mastery" id="resMastery"></div>
+            <div class="rad" style="justify-content:center; margin-top:12px">
+              <button class="knapp primar" id="testIgen">↺ Spela igen</button>
+              <button class="knapp" id="testTillOrdlista">📖 Till ordlistan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="fot">Låtens delar · musik åk 4–6 · allt sparas bara i den här datorn (inga namn, inget skickas någonstans)</div>
 </div>
 
 <script>
@@ -421,7 +484,8 @@ const KONFIG = {
   ANTAL_FRAGOR: 8,          // frågor per testomgång
   MEMORY_VISA_MS: 900,      // hur länge två olästa kort visas innan de vänds tillbaka
   TOAST_MS: 3600,           // hur länge en mikrolektion syns
-  LJUD_PA_START: false      // ljud AV som standard (25 datorer med ljud = kaos)
+  LJUD_PA_START: false,     // ljud AV som standard (25 datorer med ljud = kaos)
+  KORT_SKARM_UNDER: 780     // px skärmhöjd: under detta går appen i kompaktläge (Chromebook)
 };
 
 /* =========================================================
@@ -574,6 +638,43 @@ const LS = {
 };
 
 /* =========================================================
+   SKÄRMANPASSNING (Chromebook: låg höjd)
+   ========================================================= */
+function anpassaSkarm(){
+  const h = window.innerHeight;
+  document.body.classList.toggle('kort', h < KONFIG.KORT_SKARM_UNDER);
+  requestAnimationFrame(satMemoryRutnat);
+}
+/* Väljer det kolumnantal som ger störst kort i den yta som faktiskt finns kvar,
+   och låser brädets bredd/höjd i px. Så slipper eleven scrolla på en Chromebook. */
+function satMemoryRutnat(){
+  const bord = $('#memoryBord'), vy = bord.parentElement;
+  const n = bord.children.length;
+  if(!n || !vy) return;
+  const yta = vy.getBoundingClientRect();
+  const W = Math.max(120, yta.width), H = Math.max(120, yta.height);
+  const GAP = 8, KVOT = 4/5;              // kortets bredd/höjd-förhållande
+
+  let bast = { kol:1, storlek:0 };
+  for(let kol = 1; kol <= n; kol++){
+    const rader = Math.ceil(n / kol);
+    const kortB = (W - GAP*(kol-1)) / kol;
+    const kortH = (H - GAP*(rader-1)) / rader;
+    if(kortB <= 0 || kortH <= 0) continue;
+    const storlek = Math.min(kortB, kortH * KVOT);   // bredd som ryms med rätt proportion
+    if(storlek > bast.storlek) bast = { kol, rader, storlek };
+  }
+  const kol = bast.kol, rader = Math.ceil(n / kol);
+  const kortB = bast.storlek, kortH = kortB / KVOT;
+
+  bord.style.setProperty('--kol', kol);
+  bord.style.setProperty('--rader', rader);
+  bord.style.width  = Math.floor(kol*kortB + GAP*(kol-1)) + 'px';
+  bord.style.height = Math.floor(rader*kortH + GAP*(rader-1)) + 'px';
+}
+window.addEventListener('resize', anpassaSkarm);
+
+/* =========================================================
    LJUD – Web Audio, av som standard
    ========================================================= */
 let ljudPa = KONFIG.LJUD_PA_START, ac = null;
@@ -604,20 +705,41 @@ $('#ljudKnapp').addEventListener('click', ()=>{
   if(ljudPa) ljud.ratt();
 });
 
+/* Hjälptexter (dolda på låga skärmar tills eleven trycker ❓) */
+$('#hjalpKnapp').addEventListener('click', ()=>{
+  document.body.classList.toggle('hjalp');
+  ljud.klick();
+});
+
+/* Helskärm – störst nytta på Chromebook och i inbäddad ram */
+$('#helskarmKnapp').addEventListener('click', ()=>{
+  const el = document.documentElement;
+  if(!document.fullscreenElement){
+    (el.requestFullscreen || el.webkitRequestFullscreen || (()=>{})).call(el);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen || (()=>{})).call(document);
+  }
+  ljud.klick();
+});
+document.addEventListener('fullscreenchange', ()=>{
+  $('#helskarmKnapp').textContent = document.fullscreenElement ? '⛶ Avsluta' : '⛶ Helskärm';
+  setTimeout(anpassaSkarm, 120);
+});
+
 /* =========================================================
    BAKGRUNDSNOTER
    ========================================================= */
 (function noter(){
   const tecken = ['♪','♫','♬','🎵','🎶','♩'];
   const box = $('#noter');
-  for(let i=0;i<14;i++){
+  for(let i=0;i<12;i++){
     const n = document.createElement('span');
     n.className = 'not';
     n.textContent = tecken[i % tecken.length];
     n.style.left = (Math.random()*98) + '%';
     n.style.animationDuration = (16 + Math.random()*16) + 's';
     n.style.animationDelay = (-Math.random()*24) + 's';
-    n.style.fontSize = (16 + Math.random()*22) + 'px';
+    n.style.fontSize = (16 + Math.random()*20) + 'px';
     box.appendChild(n);
   }
 })();
@@ -633,7 +755,7 @@ function visaLage(lage){
   $$('#flikar button').forEach(b => b.classList.toggle('aktiv', b.dataset.lage === lage));
   $$('.skarm').forEach(s => s.classList.toggle('aktiv', s.id === 'skarm-' + lage));
   ljud.klick();
-  window.scrollTo({top:0, behavior:'smooth'});
+  if(lage === 'memory') requestAnimationFrame(satMemoryRutnat);
 }
 
 /* =========================================================
@@ -685,7 +807,6 @@ function startaMemory(antalPar){
   visaMemRekord();
 
   const bord = $('#memoryBord');
-  bord.classList.toggle('bred', antalPar > 6);
   bord.innerHTML = '';
   mem.kort.forEach((k, i)=>{
     const b = document.createElement('button');
@@ -697,6 +818,7 @@ function startaMemory(antalPar){
     b.addEventListener('click', ()=> vandKort(i));
     bord.appendChild(b);
   });
+  requestAnimationFrame(satMemoryRutnat);
 }
 function memRekordNyckel(){ return 'mem_rekord_' + mem.total; }
 function visaMemRekord(){
@@ -978,6 +1100,7 @@ byggOrdlista();
 startaMemory(6);
 byggUpp();
 visaTestRekord();
+anpassaSkarm();
 $('#ljudKnapp').textContent = ljudPa ? '🔊 Ljud på' : '🔇 Ljud av';
 </script>
 </body>

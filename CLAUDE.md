@@ -26,5 +26,15 @@ dokument `Latdelar-ordlista.docx` – texterna är återgivna ordagrant i `DELAR
   inget skickas någonstans. Håll det så.
 - Touch: allt funkar med tryck (välj kloss → tryck ruta). Drag & släpp finns som bonus
   för mus. Lägg inte in mönster som kräver hover.
+- **Chromebook-layouten är hela poängen med v1.1 och får inte brytas**: `.app` är exakt
+  `100dvh` hög, `body{overflow:hidden}`, och varje läge fyller resten via `.panel.fyll`
+  + `.scrollyta`. Lägg ALDRIG till innehåll som växer sidan nedåt – lägg det i en
+  `.scrollyta` i stället. Målskärm: 1366×657 CSS-px (Chromebook), och mindre i en
+  inbäddad ram.
+- `satMemoryRutnat()` räknar fram det kolumnantal som ger STÖRST kort i den yta som
+  finns kvar och låser brädets bredd/höjd i px. Den måste köras efter layout
+  (`requestAnimationFrame`) – annars mäter den ett dolt element (0 px).
+- Instruktionstexterna (`p.info`) göms automatiskt under 780 px skärmhöjd och visas
+  med ❓-knappen. Skriv därför aldrig spelregler som BARA står i `p.info`.
 - Öka versionsnumret i `<title>` vid varje leverans.
 - Filen heter `index.html` för att GitHub Pages ska servera den på repots rot-URL.
